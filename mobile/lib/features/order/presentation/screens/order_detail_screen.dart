@@ -36,12 +36,12 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
-  late final CancelOrderCubit _cancelOrderCubit;
-  late String _currentStatus;
-  late Color _currentStatusColor;
-  String _selectedReason = 'Đổi ý không muốn mua nữa';
+  late final CancelOrderCubit _cancelOrderCubit; // Biến quản lý trạng thái hủy đơn
+  late String _currentStatus; // Biến lưu trạng thái hiện tại của đơn hàng
+  late Color _currentStatusColor; // Biến lưu màu sắc hiển thị theo trạng thái
+  String _selectedReason = 'Đổi ý không muốn mua nữa'; // Biến lưu lý do hủy đơn đang chọn mặc định
 
-  final List<String> _cancelReasons = [
+  final List<String> _cancelReasons = [ // Danh sách các lý do hủy đơn hiển thị trong Dropdown
     'Đổi ý không muốn mua nữa',
     'Đặt nhầm kích cỡ (Size) hoặc màu sắc',
     'Muốn thay đổi địa chỉ nhận hàng',
@@ -52,33 +52,34 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _cancelOrderCubit = getIt<CancelOrderCubit>();
-    _currentStatus = widget.status;
-    _currentStatusColor = widget.statusColor;
-    _syncStatus();
+    _cancelOrderCubit = getIt<CancelOrderCubit>(); // Khởi tạo Cubit hủy đơn từ GetIt
+    _currentStatus = widget.status; // Gán trạng thái ban đầu từ tham số truyền vào
+    _currentStatusColor = widget.statusColor; // Gán màu sắc ban đầu
+    _syncStatus(); // Đồng bộ lại trạng thái mới nhất từ SQLite DB
   }
 
   @override
   void dispose() {
-    _cancelOrderCubit.close();
+    _cancelOrderCubit.close(); // Đóng Cubit giải phóng bộ nhớ khi thoát màn hình
     super.dispose();
   }
 
+  // Đồng bộ trạng thái đơn hàng mới nhất từ DB
   Future<void> _syncStatus() async {
     try {
-      final orders = await getIt<OrderRepository>().getOrders();
-      final match = orders.where((o) => o.id == widget.orderId).firstOrNull;
-      if (match != null && mounted) {
+      final orders = await getIt<OrderRepository>().getOrders(); // Biến lấy danh sách đơn hàng từ DB
+      final match = orders.where((o) => o.id == widget.orderId).firstOrNull; // Tìm đơn khớp với orderId
+      if (match != null && mounted) { // Nếu tìm thấy và màn hình còn hiển thị -> cập nhật trạng thái
         setState(() {
-          _currentStatus = match.status;
-          final lower = match.status.toLowerCase();
-          if (lower.contains('hủy') || lower.contains('cancel')) {
+          _currentStatus = match.status; // Cập nhật trạng thái thực tế từ DB
+          final lower = match.status.toLowerCase(); // Chuyển về chữ thường để so sánh
+          if (lower.contains('hủy') || lower.contains('cancel')) { // Nếu đã hủy -> màu đỏ
             _currentStatusColor = Colors.red;
-          } else if (lower.contains('chờ') || lower.contains('pending')) {
+          } else if (lower.contains('chờ') || lower.contains('pending')) { // Nếu chờ xác nhận -> màu cam chính
             _currentStatusColor = AppColors.primary;
-          } else if (lower.contains('đang')) {
+          } else if (lower.contains('đang')) { // Nếu đang giao -> màu xanh dương
             _currentStatusColor = Colors.blue;
-          } else {
+          } else { // Còn lại (đã giao/hoàn thành) -> màu xanh lá
             _currentStatusColor = Colors.green;
           }
         });
@@ -86,11 +87,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     } catch (_) {}
   }
 
-  // Chỉ cho phép hủy khi đơn ở trạng thái 'Chờ xác nhận'
   // Kiểm tra trạng thái được phép hủy đơn
   bool get _canCancel {
     final lower = _currentStatus.toLowerCase(); // Đưa trạng thái về chữ thường
-    return lower.contains('chờ') || lower.contains('pending'); // Chỉ cho hủy khi đơn đang chờ xác nhận
+    return lower.contains('chờ') || lower.contains('pending'); // Trả về true chỉ khi đơn đang chờ xác nhận
   }
 
   /// Hộp thoại xác nhận hủy đơn (UC-20)

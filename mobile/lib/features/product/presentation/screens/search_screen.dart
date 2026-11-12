@@ -12,10 +12,11 @@ import 'product_detail_screen.dart';
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
+  // Tạo route mở màn hình tìm kiếm kèm SearchCubit
   static Route route() {
-    return MaterialPageRoute(
+    return MaterialPageRoute( // Trả về đường dẫn điều hướng sang SearchScreen
       builder: (_) => BlocProvider(
-        create: (_) => getIt<SearchCubit>(),
+        create: (_) => getIt<SearchCubit>(), // Khởi tạo SearchCubit từ GetIt
         child: const SearchScreen(),
       ),
     );
@@ -26,17 +27,17 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController(); // Biến controller quản lý chữ trong ô tìm kiếm
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _searchController.dispose(); // Giải phóng bộ nhớ controller khi thoát màn hình
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Scaffold( // Trả về khung giao diện chính của màn hình tìm kiếm
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -81,11 +82,11 @@ class _SearchScreenState extends State<SearchScreen> {
       body: BlocBuilder<SearchCubit, SearchState>(
         builder: (context, state) {
           if (state is SearchLoading) { // Đang tìm kiếm -> hiện vòng xoay chờ
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator()); // Trả về vòng xoay loading
           }
 
           if (state is SearchEmpty) { // Không thấy sản phẩm -> báo không tìm thấy
-            return Center(
+            return Center( // Trả về màn hình thông báo không có kết quả
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -105,7 +106,7 @@ class _SearchScreenState extends State<SearchScreen> {
           }
 
           if (state is SearchError) { // Có lỗi tìm kiếm -> hiện thông báo lỗi màu đỏ
-            return Center(
+            return Center( // Trả về thông báo lỗi giữa màn hình
               child: Text(
                 state.message,
                 style: const TextStyle(color: Colors.red),
@@ -114,19 +115,19 @@ class _SearchScreenState extends State<SearchScreen> {
           }
 
           if (state is SearchLoaded) { // Tìm thấy sản phẩm -> vẽ danh sách kết quả
-            return ListView.separated(
+            return ListView.separated( // Trả về danh sách cuộn hiển thị các sản phẩm tìm được
               padding: const EdgeInsets.all(16),
               itemCount: state.products.length, // Số lượng sản phẩm tìm được
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final product = state.products[index]; // Lấy từng sản phẩm theo vị trí
-                return _buildProductItem(context, product); // Gọi hàm dựng thẻ sản phẩm
+                return _buildProductItem(context, product); // Trả về thẻ 1 sản phẩm
               },
             );
           }
 
           // Trạng thái ban đầu: Chưa nhập từ khóa
-          return Center(
+          return Center( // Trả về màn hình hướng dẫn nhập từ khóa ban đầu
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

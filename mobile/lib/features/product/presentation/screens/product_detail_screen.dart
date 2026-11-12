@@ -28,7 +28,7 @@ class ProductDetailScreen extends StatefulWidget {
 
   // 2. Mở màn hình: cấp phát Cubit & gọi loadProduct()
   static Route route(ProductEntity product) {
-    return MaterialPageRoute(
+    return MaterialPageRoute( // Trả về Route điều hướng sang màn hình chi tiết
       builder: (_) => BlocProvider( // Bọc màn hình bằng BlocProvider để dùng ProductDetailCubit
         create: (_) => getIt<ProductDetailCubit>() // Khởi tạo Cubit từ GetIt
           ..loadProduct(product.id, initialProduct: product), // Nạp trước dữ liệu cache rồi gọi API/DB
@@ -44,26 +44,26 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductDetailCubit, ProductDetailState>( // Lắng nghe state từ ProductDetailCubit vẽ lại UI
+    return BlocBuilder<ProductDetailCubit, ProductDetailState>( // Trả về BlocBuilder lắng nghe state vẽ lại UI
       builder: (context, state) {
-        final product = state is ProductDetailLoaded ? state.product : widget.product; // Lấy sản phẩm mới nhất hoặc dùng tạm sản phẩm truyền vào
-        final quantity = state is ProductDetailLoaded ? state.quantity : 1; // Lấy số lượng đang chọn (mặc định 1)
-        final selectedSize = state is ProductDetailLoaded ? state.selectedSize : null; // Lấy size đang chọn
-        final selectedColor = state is ProductDetailLoaded ? state.selectedColor : null; // Lấy màu đang chọn
-        final outOfStockSizes = state is ProductDetailLoaded // Danh sách các size hết hàng
+        final product = state is ProductDetailLoaded ? state.product : widget.product; // Biến lưu sản phẩm mới nhất hoặc dữ liệu ban đầu
+        final quantity = state is ProductDetailLoaded ? state.quantity : 1; // Biến lưu số lượng mua (mặc định 1)
+        final selectedSize = state is ProductDetailLoaded ? state.selectedSize : null; // Biến lưu size người dùng đang chọn
+        final selectedColor = state is ProductDetailLoaded ? state.selectedColor : null; // Biến lưu màu sắc đang chọn
+        final outOfStockSizes = state is ProductDetailLoaded // Biến danh sách các size hết hàng
             ? state.outOfStockSizes
             : const <String>['43'];
-        final canAddToCart = state is ProductDetailLoaded && state.canAddToCart; // Kiểm tra đủ điều kiện thêm giỏ hàng (đủ size, màu, còn hàng)
+        final canAddToCart = state is ProductDetailLoaded && state.canAddToCart; // Biến bool kiểm tra đủ điều kiện thêm giỏ hàng
 
-        return Scaffold(
+        return Scaffold( // Trả về cấu trúc màn hình chi tiết sản phẩm
           appBar: AppBar(
             title: const Text('Chi tiết sản phẩm'),
             centerTitle: true,
             actions: [
               BlocBuilder<CartBloc, CartState>(
                 builder: (context, cartState) {
-                  final count = cartState is CartLoaded ? cartState.totalQuantity : 0;
-                  return IconButton(
+                  final count = cartState is CartLoaded ? cartState.totalQuantity : 0; // Biến đếm tổng số món trong giỏ hàng
+                  return IconButton( // Trả về nút icon giỏ hàng kèm chấm đỏ nếu count > 0
                     icon: Badge(
                       isLabelVisible: count > 0,
                       label: Text(''),
@@ -398,9 +398,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }) async {
     // 1. Kiểm tra trạng thái đăng nhập
     try {
-      final authCubit = context.read<AuthCubit>();
-      if (authCubit.state is! AuthAuthenticated) {
-        // Chưa đăng nhập -> Chuyển sang màn hình Đăng nhập / Đăng ký
+      final authCubit = context.read<AuthCubit>(); // Biến lấy trạng thái đăng nhập từ AuthCubit
+      if (authCubit.state is! AuthAuthenticated) { // Nếu chưa đăng nhập -> đẩy sang màn hình LoginScreen
         await Navigator.push<void>(
           context,
           MaterialPageRoute(
@@ -412,22 +411,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         );
 
-        if (!context.mounted) return;
+        if (!context.mounted) return; // Thoát hàm nếu màn hình không còn tồn tại
 
-        // Nếu đăng nhập thành công: người dùng muốn TRỞ VỀ TRANG HOME thay vì tự động thêm vào giỏ
-        if (context.read<AuthCubit>().state is AuthAuthenticated) {
+        if (context.read<AuthCubit>().state is AuthAuthenticated) { // Nếu vừa đăng nhập thành công -> quay về trang chủ
           Navigator.of(context).popUntil((route) => route.isFirst);
-          return;
+          return; // Dừng hàm không tự động thêm giỏ
         }
 
-        // Nếu quay lại mà vẫn chưa đăng nhập thành công thì dừng lại
-        return;
+        return; // Nếu chưa đăng nhập xong mà bấm quay lại -> dừng hàm
       }
     } catch (_) {
-      // Trường hợp trong widget test không bọc AuthCubit, vẫn cho phép tiếp tục
+      // Bỏ qua nếu đang chạy trong môi trường widget test không có AuthCubit
     }
 
-    if (!context.mounted) return;
+    if (!context.mounted) return; // Dừng hàm nếu context đã bị hủy
 
     // 2. Đã đăng nhập -> Thêm sản phẩm vào giỏ hàng
     _executeAddToCart(
@@ -447,7 +444,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     required int? selectedColor,
     required int quantity,
   }) {
-    final cartItem = CartItemEntity(
+    final cartItem = CartItemEntity( // Biến đóng gói thông tin sản phẩm, size, màu, số lượng để bỏ vào giỏ
       id: CartItemEntity.generateId(
         product.id,
         selectedSize,
@@ -463,7 +460,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       quantity: quantity,
       stock: product.stock,
     );
-    context.read<CartBloc>().add(AddToCartEvent(cartItem));
+    context.read<CartBloc>().add(AddToCartEvent(cartItem)); // Gửi sự kiện AddToCartEvent sang CartBloc lưu vào DB
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

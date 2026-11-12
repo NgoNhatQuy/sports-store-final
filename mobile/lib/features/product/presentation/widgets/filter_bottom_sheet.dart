@@ -12,8 +12,8 @@ class FilterBottomSheet extends StatefulWidget {
 
   // Hiển thị modal bộ lọc
   static Future<bool?> show(BuildContext context) {
-    final filterCubit = context.read<FilterCubit>();
-    return showModalBottomSheet<bool>(
+    final filterCubit = context.read<FilterCubit>(); // Biến lấy instance FilterCubit hiện tại
+    return showModalBottomSheet<bool>( // Trả về kết quả đóng modal (true nếu bấm Áp dụng)
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -49,10 +49,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     'Đồ bảo hộ & Hỗ trợ',
   ];
 
-  late List<String> _tempBrands;
-  late List<String> _tempCategories;
-  late double _tempMinPrice;
-  late double _tempMaxPrice;
+  late List<String> _tempBrands; // Biến tạm lưu danh sách hãng đang chọn trên modal
+  late List<String> _tempCategories; // Biến tạm lưu danh mục đang chọn trên modal
+  late double _tempMinPrice; // Biến tạm lưu giá tối thiểu
+  late double _tempMaxPrice; // Biến tạm lưu giá tối đa
 
   @override
   void initState() {
@@ -87,7 +87,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Container( // Trả về khung giao diện chính của BottomSheet bộ lọc
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -236,9 +236,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                     spacing: 8,
                     runSpacing: 8,
                     children: _brandOptions.map((brand) {
-                      final isSelected = _tempBrands.contains(brand);
+                      final isSelected = _tempBrands.contains(brand); // Biến bool kiểm tra hãng có đang được chọn không
                       // 2.2 Chọn thương hiệu (onSelected)
-                      return FilterChip(
+                      return FilterChip( // Trả về 1 thẻ chip cho phép chọn nhiều hãng
                         key: Key('filter_brand_$brand'),
                         label: Text(brand),
                         selected: isSelected,
@@ -290,9 +290,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                     spacing: 8,
                     runSpacing: 8,
                     children: _categoryOptions.map((cat) {
-                      final isSelected = _tempCategories.contains(cat);
+                      final isSelected = _tempCategories.contains(cat); // Biến bool kiểm tra danh mục có đang chọn không
                       // 2.3 Chọn danh mục phân loại (onSelected)
-                      return FilterChip(
+                      return FilterChip( // Trả về 1 thẻ chip chọn danh mục
                         key: Key('filter_category_$cat'),
                         label: Text(cat),
                         selected: isSelected,
@@ -368,9 +368,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     );
   }
 
+  // Dựng nút chọn nhanh khoảng giá
   Widget _buildPresetChip(String label, double min, double max) {
-    final isSelected = _tempMinPrice == min && _tempMaxPrice == max;
-    return ChoiceChip(
+    final isSelected = _tempMinPrice == min && _tempMaxPrice == max; // Biến kiểm tra mốc giá này có đang được chọn không
+    return ChoiceChip( // Trả về chip chọn 1 khoảng giá nhanh
       label: Text(label),
       selected: isSelected,
       selectedColor: AppColors.primary.withValues(alpha: 0.15),
@@ -386,10 +387,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           color: isSelected ? AppColors.primary : Colors.transparent,
         ),
       ),
-      onSelected: (_) {
+      onSelected: (_) { // Khi bấm vào mốc giá nhanh -> gán min/max tương ứng
         setState(() {
-          _tempMinPrice = min;
-          _tempMaxPrice = max;
+          _tempMinPrice = min; // Gán giá min theo preset
+          _tempMaxPrice = max; // Gán giá max theo preset
         });
       },
     );

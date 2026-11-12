@@ -33,41 +33,41 @@ class ChangePasswordScreen extends StatefulWidget {
 }
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _currentPasswordController = TextEditingController();
-  final _newPasswordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>(); // Khóa quản lý và validate toàn bộ Form
+  final _currentPasswordController = TextEditingController(); // Controller ô mật khẩu hiện tại
+  final _newPasswordController = TextEditingController(); // Controller ô mật khẩu mới
+  final _confirmPasswordController = TextEditingController(); // Controller ô xác nhận mật khẩu mới
 
-  bool _obscureCurrent = true;
-  bool _obscureNew = true;
-  bool _obscureConfirm = true;
-  bool _isLoading = false;
+  bool _obscureCurrent = true; // Cờ ẩn/hiện mật khẩu hiện tại (true = ẩn dấu chấm)
+  bool _obscureNew = true; // Cờ ẩn/hiện mật khẩu mới
+  bool _obscureConfirm = true; // Cờ ẩn/hiện mật khẩu xác nhận
+  bool _isLoading = false; // Cờ trạng thái đang xử lý lưu (khóa nút khi true)
 
   @override
   void dispose() {
-    _currentPasswordController.dispose();
-    _newPasswordController.dispose();
-    _confirmPasswordController.dispose();
+    _currentPasswordController.dispose(); // Giải phóng bộ nhớ controller mật khẩu cũ
+    _newPasswordController.dispose(); // Giải phóng bộ nhớ controller mật khẩu mới
+    _confirmPasswordController.dispose(); // Giải phóng bộ nhớ controller xác nhận
     super.dispose();
   }
 
   // Xử lý đổi mật khẩu
   Future<void> _handleChangePassword() async {
     // 1. Validate form
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return; // Nếu có ô nhập không hợp lệ -> dừng hàm ngay
 
     // 2. Bật loading
-    setState(() => _isLoading = true);
+    setState(() => _isLoading = true); // Bật cờ loading để xoay vòng và vô hiệu hóa nút bấm
 
-    if (getIt.isRegistered<ProfileLocalDataSource>()) {
+    if (getIt.isRegistered<ProfileLocalDataSource>()) { // Kiểm tra nếu app đang dùng Local SQLite DB
       try {
         // 3a. Đổi mật khẩu qua Local DataSource
         await getIt<ProfileLocalDataSource>().changePassword(
           oldPassword: _currentPasswordController.text.trim(),
           newPassword: _newPasswordController.text.trim(),
         );
-        if (!mounted) return;
-        setState(() => _isLoading = false);
+        if (!mounted) return; // Dừng nếu màn hình đã bị đóng
+        setState(() => _isLoading = false); // Tắt loading
         // 4a. Thành công: hiện SnackBar & pop màn hình
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -76,11 +76,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        Navigator.of(context).pop(true);
-        return;
+        Navigator.of(context).pop(true); // Đóng màn hình trả kết quả true về Profile
+        return; // Kết thúc hàm tại đây, không chạy xuống nhánh API bên dưới
       } catch (e) {
-        if (!mounted) return;
-        setState(() => _isLoading = false);
+        if (!mounted) return; // Dừng nếu màn hình đã bị đóng
+        setState(() => _isLoading = false); // Tắt loading
         // 5a. Thất bại: hiện SnackBar báo lỗi
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -89,17 +89,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        return;
+        return; // Kết thúc hàm khi gặp lỗi
       }
     }
 
     try {
-      final token = widget.storageService?.getAccessToken() ??
+      final token = widget.storageService?.getAccessToken() ?? // Biến lấy token xác thực từ storage
           (getIt.isRegistered<LocalStorageService>()
               ? getIt<LocalStorageService>().getAccessToken()
               : null);
 
-      final dio = widget.dio ??
+      final dio = widget.dio ?? // Biến lấy đối tượng Dio để gọi HTTP API
           (getIt.isRegistered<Dio>() ? getIt<Dio>() : Dio());
 
       // 3b. POST đổi mật khẩu lên server
@@ -107,7 +107,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         '${ApiEndpoints.baseUrl}${ApiEndpoints.changePassword}',
         options: Options(
           headers: {
-            if (token != null && token.isNotEmpty)
+            if (token != null && token.isNotEmpty) // Nếu có token thì đính kèm vào Header
               'Authorization': 'Bearer $token',
           },
         ),
@@ -118,10 +118,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         },
       );
 
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+      if (!mounted) return; // Dừng nếu màn hình không còn hiển thị
+      setState(() => _isLoading = false); // Tắt loading
 
-      final msg = response.data is Map<String, dynamic>
+      final msg = response.data is Map<String, dynamic> // Biến lấy thông báo phản hồi từ server
           ? response.data['message'] ?? 'Đổi mật khẩu thành công!'
           : 'Đổi mật khẩu thành công!';
 
@@ -133,14 +133,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-      Navigator.of(context).pop(true);
+      Navigator.of(context).pop(true); // Đóng màn hình quay về trang trước
     } on DioException catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+      if (!mounted) return; // Dừng nếu màn hình đã đóng
+      setState(() => _isLoading = false); // Tắt loading
 
       // 5b. Thất bại: báo lỗi server
-      if (e.response?.statusCode == 400 || e.response?.statusCode == 401) {
-        final errorMsg = e.response?.data is Map<String, dynamic>
+      if (e.response?.statusCode == 400 || e.response?.statusCode == 401) { // Nếu lỗi 400/401 (sai mật khẩu cũ)
+        final errorMsg = e.response?.data is Map<String, dynamic> // Biến lấy câu báo lỗi từ server
             ? e.response?.data['message'] ?? 'Mật khẩu hiện tại không chính xác'
             : 'Mật khẩu hiện tại không chính xác';
 
@@ -151,7 +151,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        return;
+        return; // Dừng hàm sau khi báo lỗi
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
