@@ -12,7 +12,18 @@ import '../bloc/cart_event.dart';
 import '../bloc/cart_state.dart';
 import '../widgets/cart_item_card.dart';
 
+/// ============================================================================
+/// USE CASES: UC-12 (View Shopping Cart) & UC-13 (Remove Item from Cart)
+/// Đảm nhận: Thái San Yo (CE190435)
+/// Mô tả: Màn hình giỏ hàng trực quan:
+///        - Hiển thị danh sách món đồ kèm ảnh, tên, biến thể Size/Màu, đơn giá và số lượng.
+///        - Bộ nút tăng/giảm (+/-) số lượng phản hồi thời gian thực.
+///        - Cơ chế vuốt ngang xóa (Dismissible) kèm cảnh báo xác nhận AlertDialog.
+///        - Thanh toán dính đáy (Sticky Checkout Bar) tự động tính Tạm tính (Subtotal) format VNĐ.
+///        - Màn hình trống (Empty State) thân thiện kèm nút CTA "Khám phá ngay".
+/// ============================================================================
 class CartScreen extends StatelessWidget {
+  // Callback kích hoạt khi người dùng bấm "Khám phá ngay" ở màn hình giỏ hàng trống (chuyển về tab Home)
   final VoidCallback? onExploreTap;
 
   const CartScreen({super.key, this.onExploreTap});
@@ -29,6 +40,7 @@ class CartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authCubit = _tryGetAuthCubit(context);
     if (authCubit != null) {
+      // Lazy login check: Nếu chưa đăng nhập thì hiển thị màn hình nhắc nhở đăng nhập
       return BlocBuilder<AuthCubit, AuthState>(
         builder: (context, authState) {
           if (authState is! AuthAuthenticated) {
@@ -97,9 +109,11 @@ class CartScreen extends StatelessWidget {
                     itemCount: state.items.length,
                     itemBuilder: (context, index) {
                       final item = state.items[index];
+                      // UC-13: Vuốt ngang (Dismissible) để xóa item khỏi giỏ hàng
                       return Dismissible(
                         key: ValueKey(item.id),
-                        direction: DismissDirection.endToStart,
+                        direction: DismissDirection.endToStart, // Vuốt từ phải sang trái
+                        // Giao diện nền đỏ hiển thị icon thùng rác và chữ "Xóa" khi người dùng vuốt
                         background: Container(
                           margin: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -127,6 +141,7 @@ class CartScreen extends StatelessWidget {
                             ],
                           ),
                         ),
+                        // Hộp thoại xác nhận trước khi thực hiện xóa (tránh xóa nhầm ngoài ý muốn)
                         confirmDismiss: (direction) async {
                           return await showDialog<bool>(
                             context: context,
@@ -151,14 +166,17 @@ class CartScreen extends StatelessWidget {
                             ),
                           );
                         },
+                        // Khi người dùng bấm Đồng ý, bắn RemoveCartItemEvent vào CartBloc
                         onDismissed: (direction) {
                           context
                               .read<CartBloc>()
                               .add(RemoveCartItemEvent(item.id));
                         },
+                        // Thẻ sản phẩm: hỗ trợ đổi số lượng và nút bấm icon xóa
                         child: CartItemCard(
                           item: item,
                           onQuantityChanged: (newQty) {
+                            // UC-12: Cập nhật số lượng (+ / -) món đồ
                             context.read<CartBloc>().add(
                                   UpdateCartItemQuantityEvent(
                                     itemId: item.id,

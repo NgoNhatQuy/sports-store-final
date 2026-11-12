@@ -17,6 +17,15 @@ import '../../../product/presentation/cubit/filter_cubit.dart';
 import '../../../product/presentation/cubit/filter_state.dart';
 import '../../../product/presentation/widgets/filter_bottom_sheet.dart';
 
+/// ============================================================================
+/// USE CASE: UC-07 - Home Layout Screen
+/// Đảm nhận: Thái San Yo (CE190435)
+/// Mô tả: Màn hình chính của ứng dụng phong cách Adidas thể thao:
+///        - Header hiển thị chào người dùng / khách vãng lai (Lazy login)
+///        - Banner Carousel tự động chuyển slide sau mỗi 4 giây (PageView + Timer)
+///        - Dãy thương hiệu nhanh (Brand Chips nằm ngang)
+///        - Lưới 4 sản phẩm nổi bật (Featured Products 2 cột) kèm nút "Xem tất cả"
+/// ============================================================================
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onSeeAllTap;
 

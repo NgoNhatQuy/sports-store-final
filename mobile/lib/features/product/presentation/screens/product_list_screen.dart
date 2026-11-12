@@ -13,6 +13,13 @@ import '../widgets/filter_bottom_sheet.dart';
 import 'product_detail_screen.dart';
 import 'search_screen.dart';
 
+/// ============================================================================
+/// USE CASE: UC-04 - View Product List
+/// Đảm nhận: Thái San Yo (CE190435)
+/// Mô tả: Màn hình danh sách sản phẩm bố cục Grid 2 cột đối xứng (CustomScrollView + SliverGrid).
+///        Tích hợp kéo để làm mới (Pull-to-refresh), phân trang vô tận (Infinite Scroll)
+///        với ngưỡng 200px cách đáy, và hiệu ứng Shimmer Skeleton lúc đang tải.
+/// ============================================================================
 class ProductListScreen extends StatefulWidget {
   final String? categoryId;
   final String? categoryName;
@@ -24,6 +31,7 @@ class ProductListScreen extends StatefulWidget {
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
+  // Bộ điều khiển cuộn dùng để theo dõi vị trí cuộn cho Infinite Scroll
   final ScrollController _scrollController = ScrollController();
   final List<String> _brands = [
     'Tất cả',
@@ -37,36 +45,40 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   void initState() {
     super.initState();
-    // Kích hoạt tải danh sách sản phẩm lần đầu (kèm lọc theo danh mục nếu có)
+    // 1. Kích hoạt lấy sản phẩm đợt đầu qua ProductBloc (kèm categoryId nếu chuyển từ Danh mục sang)
     context.read<ProductBloc>().add(
       FetchProductsEvent(categoryId: widget.categoryId),
     );
 
-    // Thiết lập Infinite Scroll: kích hoạt FetchMoreProductsEvent khi cuộn gần cuối danh sách
+    // 2. Lắng nghe sự kiện cuộn màn hình để kích hoạt tải thêm (Infinite Scroll)
     _scrollController.addListener(_onScroll);
   }
 
+  /// Hàm callback khi người dùng cuộn danh sách: kiểm tra nếu gần chạm đáy thì bắn event tải thêm
   void _onScroll() {
     if (_isNearBottom) {
       context.read<ProductBloc>().add(const FetchMoreProductsEvent());
     }
   }
 
+  /// Getter xác định người dùng đã cuộn gần đến cuối danh sách hay chưa (ngưỡng 200 pixel)
   bool get _isNearBottom {
     if (!_scrollController.hasClients) return false;
     final maxScroll = _scrollController.position.maxScrollExtent;
     final currentScroll = _scrollController.offset;
-    // Khi còn cách đáy 200 pixel thì trigger tải trang tiếp theo
+    // Khi vị trí cuộn hiện tại nằm trong khoảng 200px tính từ điểm cuối thì kích hoạt
     return currentScroll >= (maxScroll - 200);
   }
 
   @override
   void dispose() {
+    // Hủy đăng ký listener và giải phóng tài nguyên ScrollController tránh leak bộ nhớ
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
 
+  /// Hàm xử lý làm mới danh sách khi người dùng thực hiện thao tác kéo vuốt xuống (Pull-to-Refresh)
   Future<void> _onRefresh() async {
     context.read<ProductBloc>().add(const FetchProductsEvent(isRefresh: true));
   }

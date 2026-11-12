@@ -8,6 +8,17 @@ import '../../domain/usecases/create_order_usecase.dart';
 import 'checkout_event.dart';
 import 'checkout_state.dart';
 
+/// ============================================================================
+/// USE CASE: UC-08 - Order Items (Checkout & Place Order)
+/// Đảm nhận: Thái San Yo (CE190435)
+/// Tầng: Presentation Layer (BLoC State Management)
+/// Mô tả: Quản lý toàn bộ quy trình thanh toán và đặt hàng:
+///        - Nạp địa chỉ giao hàng mặc định (kết nối UC-10/18 Sổ địa chỉ 3 cấp)
+///        - Chọn phương thức thanh toán (COD / Chuyển khoản)
+///        - Chọn phương thức vận chuyển (Tiêu chuẩn / Hỏa tốc)
+///        - Áp dụng voucher / mã giảm giá (UC-22)
+///        - Kiểm tra tính hợp lệ và gọi UseCase tạo đơn hàng gửi lên hệ thống
+/// ============================================================================
 class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final CreateOrderUseCase createOrderUseCase;
   final GetAddressesUseCase? getAddressesUseCase;
@@ -25,6 +36,10 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     on<PlaceOrderEvent>(_onPlaceOrder);
   }
 
+  /// --------------------------------------------------------------------------
+  /// Hàm: _onLoadCheckoutData
+  /// Mục đích: Khởi tạo thông tin thanh toán, tự động lấy địa chỉ mặc định của người dùng.
+  /// --------------------------------------------------------------------------
   Future<void> _onLoadCheckoutData(
     LoadCheckoutDataEvent event,
     Emitter<CheckoutState> emit,
@@ -52,6 +67,10 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     }
   }
 
+  /// --------------------------------------------------------------------------
+  /// Hàm: _onSelectShippingAddress
+  /// Mục đích: Cập nhật địa chỉ nhận hàng được chọn từ màn hình sổ địa chỉ AddressListScreen.
+  /// --------------------------------------------------------------------------
   void _onSelectShippingAddress(
     SelectShippingAddressEvent event,
     Emitter<CheckoutState> emit,
@@ -63,6 +82,10 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     ));
   }
 
+  /// --------------------------------------------------------------------------
+  /// Hàm: _onSelectPaymentMethod
+  /// Mục đích: Lựa chọn phương thức thanh toán (COD - Thanh toán khi nhận hàng, VNPAY...).
+  /// --------------------------------------------------------------------------
   void _onSelectPaymentMethod(
     SelectPaymentMethodEvent event,
     Emitter<CheckoutState> emit,
@@ -74,6 +97,10 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     ));
   }
 
+  /// --------------------------------------------------------------------------
+  /// Hàm: _onSelectShippingMethod
+  /// Mục đích: Lựa chọn đơn vị vận chuyển (Tiêu chuẩn / Nhanh) và cập nhật lại phí ship.
+  /// --------------------------------------------------------------------------
   void _onSelectShippingMethod(
     SelectShippingMethodEvent event,
     Emitter<CheckoutState> emit,
@@ -176,10 +203,26 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     ));
   }
 
+  /// --------------------------------------------------------------------------
+  /// UC-08: Hàm _onPlaceOrder
+  /// Mục đích: Thực thi quy trình chốt đơn hàng (Place Order).
+  /// Luồng xử lý nghiệp vụ:
+  ///   1. Kiểm tra validation: Giỏ hàng không được rỗng (event.items.isNotEmpty).
+  ///   2. Kiểm tra validation: Bắt buộc phải có địa chỉ nhận hàng (shippingAddress != null).
+  ///   3. Phát state CheckoutStatus.submitting (UI vô hiệu hóa nút bấm, hiển thị loading xoay).
+  ///   4. Chuyển đổi danh sách CartItemEntity thành OrderItemEntity.
+  ///   5. Tính toán Tạm tính (subtotal = sum(price * quantity)).
+  ///   6. Gọi createOrderUseCase(...) với các tham số: món hàng, địa chỉ, thanh toán, phí ship, giảm giá, ghi chú.
+  ///   7. Nếu thành công: Phát CheckoutStatus.success(createdOrder: order).
+  ///      UI sẽ lắng nghe state này để điều hướng sang OrderedScreen (hoặc OrderDetailScreen)
+  ///      và kích hoạt ClearCartEvent để làm trống giỏ hàng.
+  ///   8. Nếu thất bại: Phát CheckoutStatus.failure kèm thông điệp lỗi cụ thể.
+  /// --------------------------------------------------------------------------
   Future<void> _onPlaceOrder(
     PlaceOrderEvent event,
     Emitter<CheckoutState> emit,
   ) async {
+    // 1. Kiểm tra giỏ hàng có rỗng không
     if (event.items.isEmpty) {
       emit(state.copyWith(
         status: CheckoutStatus.failure,
@@ -188,6 +231,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       return;
     }
 
+    // 2. Kiểm tra người dùng đã chọn địa chỉ nhận hàng chưa
     final shippingAddress = state.selectedAddress;
     if (shippingAddress == null) {
       emit(state.copyWith(
@@ -197,18 +241,22 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       return;
     }
 
+    // 3. Chuyển sang trạng thái submitting để UI khóa nút và hiện loading
     emit(state.copyWith(status: CheckoutStatus.submitting, clearError: true));
 
     try {
+      // 4. Chuyển đổi danh sách CartItemEntity sang OrderItemEntity
       final orderItems = event.items
           .map((cartItem) => OrderItemEntity.fromCartItem(cartItem))
           .toList();
 
+      // 5. Tính toán tiền tạm tính subtotal
       final subtotal = event.items.fold<double>(
         0.0,
         (sum, item) => sum + item.totalPrice,
       );
 
+      // 6. Gọi CreateOrderUseCase gửi payload tạo đơn hàng
       final order = await createOrderUseCase(
         CreateOrderParams(
           items: orderItems,
@@ -222,12 +270,14 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         ),
       );
 
+      // 7. Phát CheckoutStatus.success mang theo thực thể Order vừa được tạo
       emit(state.copyWith(
         status: CheckoutStatus.success,
         createdOrder: order,
         clearError: true,
       ));
     } catch (e) {
+      // 8. Bắt lỗi (mất mạng, server timeout, hết hàng) và hiển thị thông báo lỗi
       emit(state.copyWith(
         status: CheckoutStatus.failure,
         errorMessage: 'Đặt hàng thất bại: ${e.toString()}',
