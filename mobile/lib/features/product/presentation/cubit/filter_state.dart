@@ -26,10 +26,10 @@ class FilterState extends Equatable {
   // Đếm số bộ lọc đang chọn
   int get activeFilterCount {
     var count = 0;
-    count += selectedBrands.length;
-    count += selectedCategories.length;
+    count += selectedBrands.length; // Cộng số lượng hãng đã chọn
+    count += selectedCategories.length; // Cộng số lượng danh mục đã chọn
     if (minPrice > minPriceLimit || maxPrice < maxPriceLimit) {
-      count += 1;
+      count += 1; // Nếu có kéo khoảng giá thì cộng thêm 1
     }
     return count;
   }
@@ -37,16 +37,16 @@ class FilterState extends Equatable {
   // Kiểm tra sản phẩm thỏa tiêu chí
   bool matches(ProductEntity product) {
     if (selectedBrands.isNotEmpty && !selectedBrands.contains(product.brand)) {
-      return false;
+      return false; // Loại nếu không đúng hãng đang lọc
     }
     if (selectedCategories.isNotEmpty &&
         !selectedCategories.contains(product.category)) {
-      return false;
+      return false; // Loại nếu không đúng danh mục đang lọc
     }
     if (product.price < minPrice || product.price > maxPrice) {
-      return false;
+      return false; // Loại nếu giá nằm ngoài khoảng min-max
     }
-    return true;
+    return true; // Giữ lại sản phẩm hợp lệ
   }
 
   FilterState copyWith({

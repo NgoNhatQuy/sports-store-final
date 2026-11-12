@@ -83,6 +83,7 @@ class ProductLocalDataSourceImpl
     );
   }
 
+  // Truy vấn danh sách & tìm kiếm sản phẩm trong SQLite (UC-09)
   @override
   Future<List<ProductModel>> getProducts({
     int page = 1,
@@ -90,29 +91,29 @@ class ProductLocalDataSourceImpl
     String? categoryId,
     String? keyword,
   }) async {
-    final db = await appDatabase.database;
-    final whereClauses = <String>[];
-    final whereArgs = <dynamic>[];
+    final db = await appDatabase.database; // 1. Kết nối SQLite DB
+    final whereClauses = <String>[]; // Mảng lưu các điều kiện WHERE
+    final whereArgs = <dynamic>[]; // Mảng lưu giá trị truyền vào dấu ?
 
-    if (categoryId != null && categoryId.isNotEmpty) {
+    if (categoryId != null && categoryId.isNotEmpty) { // Lọc theo danh mục nếu có
       whereClauses.add('(category_id = ? OR category = ?)');
       whereArgs.add(categoryId);
       whereArgs.add(categoryId);
     }
 
-    if (keyword != null && keyword.trim().isNotEmpty) {
-      final term = '%${keyword.trim().toLowerCase()}%';
-      whereClauses.add('(LOWER(name) LIKE ? OR LOWER(brand) LIKE ?)');
+    if (keyword != null && keyword.trim().isNotEmpty) { // 2. Lọc theo từ khóa (tên hoặc hãng)
+      final term = '%${keyword.trim().toLowerCase()}%'; // Tạo mẫu LIKE %từ_khóa%
+      whereClauses.add('(LOWER(name) LIKE ? OR LOWER(brand) LIKE ?)'); // Không phân biệt hoa thường
       whereArgs.add(term);
       whereArgs.add(term);
     }
 
-    final whereString = whereClauses.isNotEmpty
+    final whereString = whereClauses.isNotEmpty // Ghép các điều kiện bằng AND
         ? whereClauses.join(' AND ')
         : null;
-    final offset = (page - 1) * size;
+    final offset = (page - 1) * size; // Tính vị trí phân trang
 
-    final results = await db.query(
+    final results = await db.query( // 3. Chạy lệnh SELECT trên bảng 'products'
       'products',
       where: whereString,
       whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
@@ -121,23 +122,24 @@ class ProductLocalDataSourceImpl
       orderBy: 'id ASC',
     );
 
-    return results.map(_mapRowToProduct).toList();
+    return results.map(_mapRowToProduct).toList(); // 4. Chuyển từng dòng SQLite thành ProductModel
   }
 
+  // Truy vấn chi tiết 1 sản phẩm theo ID trong SQLite (UC-05)
   @override
   Future<ProductModel> getProductById(String id) async {
-    final db = await appDatabase.database;
-    final results = await db.query(
+    final db = await appDatabase.database; // 1. Kết nối SQLite DB
+    final results = await db.query( // 2. Tìm dòng có id khớp trong bảng 'products'
       'products',
       where: 'id = ?',
       whereArgs: [id],
     );
 
-    if (results.isEmpty) {
+    if (results.isEmpty) { // Nếu không thấy -> báo lỗi không tìm thấy
       throw ServerException(message: 'Không tìm thấy sản phẩm có mã $id');
     }
 
-    return _mapRowToProduct(results.first);
+    return _mapRowToProduct(results.first); // 3. Chuyển dòng tìm được thành ProductModel trả về
   }
 
   @override

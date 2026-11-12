@@ -51,8 +51,8 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
         // 1. Ô nhập từ khóa
         title: TextField(
-          controller: _searchController,
-          autofocus: true,
+          controller: _searchController, // Controller quản lý chữ đang nhập
+          autofocus: true, // Tự động bật bàn phím khi mở màn hình
           decoration: InputDecoration(
             hintText: 'Tìm kiếm giày, quần áo, thương hiệu...',
             hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
@@ -60,19 +60,19 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           // 2. Gõ từ khóa -> gọi cubit.search(keyword)
           onChanged: (keyword) {
-            context.read<SearchCubit>().search(keyword);
-            setState(() {});
+            context.read<SearchCubit>().search(keyword); // Gọi hàm tìm kiếm real-time mỗi khi gõ
+            setState(() {}); // Cập nhật UI để hiện/ẩn nút X xóa nhanh
           },
         ),
         actions: [
-          if (_searchController.text.isNotEmpty)
+          if (_searchController.text.isNotEmpty) // Chỉ hiện nút X khi ô tìm kiếm có chữ
             // 3. Bấm (X) -> gọi cubit.clear()
             IconButton(
               icon: const Icon(Icons.cancel, color: Colors.grey, size: 20),
               onPressed: () {
-                _searchController.clear();
-                context.read<SearchCubit>().clear();
-                setState(() {});
+                _searchController.clear(); // Xóa trắng chữ trong ô nhập
+                context.read<SearchCubit>().clear(); // Đưa Cubit về trạng thái SearchInitial
+                setState(() {}); // Ẩn nút X đi
               },
             ),
         ],
@@ -80,11 +80,11 @@ class _SearchScreenState extends State<SearchScreen> {
       // 4. Lắng nghe State vẽ UI (Loading/Empty/Loaded)
       body: BlocBuilder<SearchCubit, SearchState>(
         builder: (context, state) {
-          if (state is SearchLoading) {
+          if (state is SearchLoading) { // Đang tìm kiếm -> hiện vòng xoay chờ
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state is SearchEmpty) {
+          if (state is SearchEmpty) { // Không thấy sản phẩm -> báo không tìm thấy
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -104,7 +104,7 @@ class _SearchScreenState extends State<SearchScreen> {
             );
           }
 
-          if (state is SearchError) {
+          if (state is SearchError) { // Có lỗi tìm kiếm -> hiện thông báo lỗi màu đỏ
             return Center(
               child: Text(
                 state.message,
@@ -113,14 +113,14 @@ class _SearchScreenState extends State<SearchScreen> {
             );
           }
 
-          if (state is SearchLoaded) {
+          if (state is SearchLoaded) { // Tìm thấy sản phẩm -> vẽ danh sách kết quả
             return ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: state.products.length,
+              itemCount: state.products.length, // Số lượng sản phẩm tìm được
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final product = state.products[index];
-                return _buildProductItem(context, product);
+                final product = state.products[index]; // Lấy từng sản phẩm theo vị trí
+                return _buildProductItem(context, product); // Gọi hàm dựng thẻ sản phẩm
               },
             );
           }
@@ -153,7 +153,7 @@ class _SearchScreenState extends State<SearchScreen> {
     return InkWell(
       // 5. Chạm sản phẩm -> mở ProductDetailScreen
       onTap: () {
-        Navigator.of(context).push(ProductDetailScreen.route(product));
+        Navigator.of(context).push(ProductDetailScreen.route(product)); // Chuyển sang màn hình chi tiết sản phẩm (UC-05)
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(

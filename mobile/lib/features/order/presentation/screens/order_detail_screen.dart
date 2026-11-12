@@ -87,9 +87,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   // Chỉ cho phép hủy khi đơn ở trạng thái 'Chờ xác nhận'
+  // Kiểm tra trạng thái được phép hủy đơn
   bool get _canCancel {
-    final lower = _currentStatus.toLowerCase();
-    return lower.contains('chờ') || lower.contains('pending');
+    final lower = _currentStatus.toLowerCase(); // Đưa trạng thái về chữ thường
+    return lower.contains('chờ') || lower.contains('pending'); // Chỉ cho hủy khi đơn đang chờ xác nhận
   }
 
   /// Hộp thoại xác nhận hủy đơn (UC-20)
@@ -144,9 +145,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ),
                       );
                     }).toList(),
-                    onChanged: (val) {
+                    onChanged: (val) { // 2.1 Chọn lý do hủy đơn từ danh sách
                       if (val != null) {
-                        setDialogState(() => _selectedReason = val);
+                        setDialogState(() => _selectedReason = val); // Cập nhật lý do tạm trong dialog
                       }
                     },
                   ),
@@ -156,7 +157,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(dialogCtx).pop(false),
+              onPressed: () => Navigator.of(dialogCtx).pop(false), // Bấm Quay lại -> đóng dialog, không hủy
               child: const Text('Quay lại', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
@@ -165,7 +166,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-              onPressed: () => Navigator.of(dialogCtx).pop(true),
+              onPressed: () => Navigator.of(dialogCtx).pop(true), // 2.2 Bấm Xác nhận -> trả về true đóng dialog
               child: const Text('Xác nhận hủy'),
             ),
           ],
@@ -175,8 +176,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     // 3. Xác nhận hủy -> gọi cubit.cancelOrder()
     if (confirmed == true && mounted) {
-      if (!_canCancel) return;
-      _cancelOrderCubit.cancelOrder(
+      if (!_canCancel) return; // Chặn nếu đơn không còn ở trạng thái chờ
+      _cancelOrderCubit.cancelOrder( // Gọi Cubit thực thi hủy đơn
         widget.orderId,
         reason: _selectedReason,
       );
@@ -198,15 +199,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       ),
       body: BlocConsumer<CancelOrderCubit, CancelOrderState>(
         bloc: _cancelOrderCubit,
-        listener: (context, state) {
-          if (state is CancelOrderSuccess) {
+        listener: (context, state) { // 4. Lắng nghe kết quả từ CancelOrderCubit
+          if (state is CancelOrderSuccess) { // 4a. Hủy thành công -> đổi UI sang 'Đã hủy'
             setState(() {
-              _currentStatus = 'Đã hủy';
-              _currentStatusColor = Colors.red;
+              _currentStatus = 'Đã hủy'; // Cập nhật chữ trạng thái
+              _currentStatusColor = Colors.red; // Đổi màu trạng thái sang đỏ
             });
-            widget.onStatusChanged?.call('Đã hủy');
+            widget.onStatusChanged?.call('Đã hủy'); // Báo cho màn hình danh sách cập nhật theo
 
-            ScaffoldMessenger.of(context).showSnackBar(
+            ScaffoldMessenger.of(context).showSnackBar( // Hiện thông báo xanh thành công
               SnackBar(
                 content: Row(
                   children: [
@@ -219,7 +220,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 duration: const Duration(seconds: 2),
               ),
             );
-          } else if (state is CancelOrderError) {
+          } else if (state is CancelOrderError) { // 4b. Hủy thất bại -> hiện thông báo lỗi đỏ
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Row(
@@ -236,7 +237,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           }
         },
         builder: (context, state) {
-          final isLoading = state is CancelOrderLoading;
+          final isLoading = state is CancelOrderLoading; // Kiểm tra trạng thái đang xử lý hủy
 
           return ListView(
             padding: const EdgeInsets.all(16),

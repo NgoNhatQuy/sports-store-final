@@ -29,9 +29,9 @@ class ProductDetailScreen extends StatefulWidget {
   // 2. Mở màn hình: cấp phát Cubit & gọi loadProduct()
   static Route route(ProductEntity product) {
     return MaterialPageRoute(
-      builder: (_) => BlocProvider(
-        create: (_) => getIt<ProductDetailCubit>()
-          ..loadProduct(product.id, initialProduct: product),
+      builder: (_) => BlocProvider( // Bọc màn hình bằng BlocProvider để dùng ProductDetailCubit
+        create: (_) => getIt<ProductDetailCubit>() // Khởi tạo Cubit từ GetIt
+          ..loadProduct(product.id, initialProduct: product), // Nạp trước dữ liệu cache rồi gọi API/DB
         child: ProductDetailScreen(product: product),
       ),
     );
@@ -44,16 +44,16 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductDetailCubit, ProductDetailState>(
+    return BlocBuilder<ProductDetailCubit, ProductDetailState>( // Lắng nghe state từ ProductDetailCubit vẽ lại UI
       builder: (context, state) {
-        final product = state is ProductDetailLoaded ? state.product : widget.product;
-        final quantity = state is ProductDetailLoaded ? state.quantity : 1;
-        final selectedSize = state is ProductDetailLoaded ? state.selectedSize : null;
-        final selectedColor = state is ProductDetailLoaded ? state.selectedColor : null;
-        final outOfStockSizes = state is ProductDetailLoaded
+        final product = state is ProductDetailLoaded ? state.product : widget.product; // Lấy sản phẩm mới nhất hoặc dùng tạm sản phẩm truyền vào
+        final quantity = state is ProductDetailLoaded ? state.quantity : 1; // Lấy số lượng đang chọn (mặc định 1)
+        final selectedSize = state is ProductDetailLoaded ? state.selectedSize : null; // Lấy size đang chọn
+        final selectedColor = state is ProductDetailLoaded ? state.selectedColor : null; // Lấy màu đang chọn
+        final outOfStockSizes = state is ProductDetailLoaded // Danh sách các size hết hàng
             ? state.outOfStockSizes
             : const <String>['43'];
-        final canAddToCart = state is ProductDetailLoaded && state.canAddToCart;
+        final canAddToCart = state is ProductDetailLoaded && state.canAddToCart; // Kiểm tra đủ điều kiện thêm giỏ hàng (đủ size, màu, còn hàng)
 
         return Scaffold(
           appBar: AppBar(
@@ -238,24 +238,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       Wrap(
                         spacing: 10,
                         runSpacing: 8,
-                        children: product.sizes.map((size) {
-                          final isOutOfStock = outOfStockSizes.contains(size);
-                          final isSelected = selectedSize == size;
+                        children: product.sizes.map((size) { // Duyệt danh sách size để vẽ từng nút chọn
+                          final isOutOfStock = outOfStockSizes.contains(size); // Kiểm tra size có hết hàng không
+                          final isSelected = selectedSize == size; // Kiểm tra size này có đang được chọn không
 
                           return InkWell(
                             key: Key('size_$size'),
                             // 3. Chọn Size -> gọi cubit.selectSize(size)
-                            // 2. Người dùng chạm chọn kích thước -> Kiểm tra tồn kho, nếu còn hàng thì gọi cubit.selectSize(size)
-                            onTap: isOutOfStock
+                            onTap: isOutOfStock // Nếu hết hàng thì khóa nút (null)
                                 ? null
                                 : () {
-                                    context.read<ProductDetailCubit>().selectSize(size);
+                                    context.read<ProductDetailCubit>().selectSize(size); // Gọi Cubit lưu size đã chọn
                                   },
                             borderRadius: BorderRadius.circular(8),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                               decoration: BoxDecoration(
-                                color: isSelected
+                                color: isSelected // Đổi màu nền nếu đang chọn
                                     ? AppColors.primary
                                     : (isOutOfStock ? Colors.grey.shade100 : Colors.white),
                                 borderRadius: BorderRadius.circular(8),
@@ -272,7 +271,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       ? Colors.grey.shade400
                                       : (isSelected ? Colors.white : Colors.black87),
                                   fontWeight: FontWeight.bold,
-                                  decoration: isOutOfStock ? TextDecoration.lineThrough : null,
+                                  decoration: isOutOfStock ? TextDecoration.lineThrough : null, // Gạch ngang nếu hết hàng
                                 ),
                               ),
                             ),
@@ -291,18 +290,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline),
                             onPressed: () {
-                              context.read<ProductDetailCubit>().decrementQuantity();
+                              context.read<ProductDetailCubit>().decrementQuantity(); // Giảm số lượng (tối thiểu 1)
                             },
                           ),
                           Text(
-                            '$quantity',
+                            '$quantity', // Hiển thị số lượng hiện tại
                             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           // 5. Bấm (+) -> gọi cubit.incrementQuantity()
                           IconButton(
                             icon: const Icon(Icons.add_circle_outline),
                             onPressed: () {
-                              context.read<ProductDetailCubit>().incrementQuantity();
+                              context.read<ProductDetailCubit>().incrementQuantity(); // Tăng số lượng (không vượt tồn kho)
                             },
                           ),
                         ],
@@ -344,7 +343,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   children: [
                     const Text('Tổng tiền:', style: TextStyle(fontSize: 12, color: Colors.grey)),
                     Text(
-                      CurrencyFormatter.formatVnd(product.price * quantity),
+                      CurrencyFormatter.formatVnd(product.price * quantity), // Tính tổng tiền theo số lượng
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -361,8 +360,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     // 6. Bấm Thêm giỏ hàng -> dispatch AddToCartEvent
-                    onPressed: canAddToCart
-                        ? () => _onAddToCartPressed(
+                    onPressed: canAddToCart // Chỉ cho bấm khi đã chọn đủ size và còn hàng
+                        ? () => _onAddToCartPressed( // Gọi hàm kiểm tra đăng nhập & thêm vào giỏ
                               context,
                               product: product,
                               selectedSize: selectedSize!,

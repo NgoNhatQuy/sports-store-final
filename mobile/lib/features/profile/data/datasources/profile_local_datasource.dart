@@ -123,28 +123,26 @@ class ProfileLocalDataSourceImpl
     return profile;
   }
 
-  /// 3. ĐỔI MẬT KHẨU TÀI KHOẢN (Bảng 'users')
+  // Đổi mật khẩu tài khoản trong SQLite (UC-28)
   @override
   Future<void> changePassword({
     required String oldPassword,
     required String newPassword,
   }) async {
-    final db = await appDatabase.database;
-    final userId = _getEffectiveUserId();
+    final db = await appDatabase.database; // 1. Kết nối SQLite DB
+    final userId = _getEffectiveUserId(); // Lấy ID tài khoản đang đăng nhập
 
-    // Kiểm tra mật khẩu cũ có khớp trong cơ sở dữ liệu không
-    final results = await db.query(
+    final results = await db.query( // 2. Kiểm tra mật khẩu cũ có khớp trong bảng 'users' không
       'users',
       where: 'id = ? AND password = ?',
       whereArgs: [userId, oldPassword],
     );
 
-    if (results.isEmpty) {
+    if (results.isEmpty) { // Nếu không khớp -> ném lỗi báo sai mật khẩu
       throw Exception('Mật khẩu hiện tại không chính xác');
     }
 
-    // Cập nhật mật khẩu mới
-    await db.update(
+    await db.update( // 3. Chạy lệnh UPDATE lưu mật khẩu mới vào bảng 'users'
       'users',
       {'password': newPassword},
       where: 'id = ?',

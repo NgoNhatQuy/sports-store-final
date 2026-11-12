@@ -57,33 +57,32 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   @override
   void initState() {
     super.initState();
-    final currentState = context.read<FilterCubit>().state;
-    _tempBrands = List<String>.from(currentState.selectedBrands);
-    _tempCategories = List<String>.from(currentState.selectedCategories);
-    _tempMinPrice = currentState.minPrice;
-    _tempMaxPrice = currentState.maxPrice;
+    final currentState = context.read<FilterCubit>().state; // Lấy bộ lọc hiện tại từ FilterCubit
+    _tempBrands = List<String>.from(currentState.selectedBrands); // Lưu tạm hãng đang chọn
+    _tempCategories = List<String>.from(currentState.selectedCategories); // Lưu tạm danh mục đang chọn
+    _tempMinPrice = currentState.minPrice; // Gán giá min hiện tại
+    _tempMaxPrice = currentState.maxPrice; // Gán giá max hiện tại
   }
 
   // Đặt lại các biến lọc tạm
   void _resetLocal() {
     setState(() {
-      _tempBrands.clear();
-      _tempCategories.clear();
-      _tempMinPrice = FilterState.minPriceLimit;
-      _tempMaxPrice = FilterState.maxPriceLimit;
+      _tempBrands.clear(); // Xóa danh sách hãng tạm
+      _tempCategories.clear(); // Xóa danh sách danh mục tạm
+      _tempMinPrice = FilterState.minPriceLimit; // Reset giá min về 0
+      _tempMaxPrice = FilterState.maxPriceLimit; // Reset giá max về 5tr
     });
   }
 
   // Áp dụng bộ lọc sang FilterCubit
   void _applyFilter() {
-    // 3. Bấm 'Áp dụng bộ lọc' -> cập nhật sang FilterCubit và đóng modal
-    context.read<FilterCubit>().updateFilter(
+    context.read<FilterCubit>().updateFilter( // 3. Đẩy dữ liệu tạm sang FilterCubit.updateFilter()
           brands: _tempBrands,
           categories: _tempCategories,
           minPrice: _tempMinPrice,
           maxPrice: _tempMaxPrice,
         );
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop(true); // Đóng modal quay về ProductListScreen
   }
 
   @override

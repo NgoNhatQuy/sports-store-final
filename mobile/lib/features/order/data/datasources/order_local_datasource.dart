@@ -207,25 +207,26 @@ class OrderLocalDataSourceImpl
     return orders;
   }
 
+  // Cập nhật trạng thái hủy đơn hàng trong SQLite (UC-20)
   @override
   Future<OrderModel> cancelOrder(String orderId, {String? reason}) async {
-    final db = await appDatabase.database;
+    final db = await appDatabase.database; // 1. Kết nối SQLite DB
 
-    final existing = await db.query(
+    final existing = await db.query( // 2. Kiểm tra đơn hàng có tồn tại trong bảng 'orders' không
       'orders',
       where: 'id = ?',
       whereArgs: [orderId],
     );
 
-    if (existing.isEmpty) {
+    if (existing.isEmpty) { // Nếu không thấy -> ném lỗi không tìm thấy đơn
       throw ServerException(message: 'Không tìm thấy đơn hàng mã $orderId');
     }
 
-    final reasonText = reason != null && reason.trim().isNotEmpty
+    final reasonText = reason != null && reason.trim().isNotEmpty // Ghép chuỗi lý do hủy vào ghi chú
         ? ' [Lý do: $reason]'
         : '';
 
-    await db.update(
+    await db.update( // 3. Chạy lệnh UPDATE đổi status thành 'Đã hủy' và lưu lý do
       'orders',
       {
         'status': 'Đã hủy',
@@ -235,7 +236,7 @@ class OrderLocalDataSourceImpl
       whereArgs: [orderId],
     );
 
-    final orders = await getOrders();
+    final orders = await getOrders(); // 4. Lấy lại danh sách đơn hàng mới nhất và trả về đơn vừa hủy
     return orders.firstWhere((o) => o.id == orderId);
   }
 }

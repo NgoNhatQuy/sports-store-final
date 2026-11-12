@@ -334,11 +334,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 hintText: 'Nhập mật khẩu hiện tại',
                 obscureText: _obscureCurrent,
                 onToggleVisibility: () {
-                  setState(() => _obscureCurrent = !_obscureCurrent);
+                  setState(() => _obscureCurrent = !_obscureCurrent); // Đảo trạng thái ẩn/hiện mật khẩu cũ
                 },
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
-                    return 'Vui lòng nhập mật khẩu hiện tại';
+                    return 'Vui lòng nhập mật khẩu hiện tại'; // Chặn nếu để trống
                   }
                   return null;
                 },
@@ -352,17 +352,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 hintText: 'Nhập mật khẩu mới',
                 obscureText: _obscureNew,
                 onToggleVisibility: () {
-                  setState(() => _obscureNew = !_obscureNew);
+                  setState(() => _obscureNew = !_obscureNew); // Đảo trạng thái ẩn/hiện mật khẩu mới
                 },
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
-                    return 'Vui lòng nhập mật khẩu mới';
+                    return 'Vui lòng nhập mật khẩu mới'; // Chặn nếu để trống
                   }
                   if (val.trim().length < 6) {
-                    return 'Mật khẩu mới phải có ít nhất 6 ký tự';
+                    return 'Mật khẩu mới phải có ít nhất 6 ký tự'; // Chặn nếu ngắn hơn 6 ký tự
                   }
                   if (val.trim() == _currentPasswordController.text.trim()) {
-                    return 'Mật khẩu mới không được trùng mật khẩu cũ';
+                    return 'Mật khẩu mới không được trùng mật khẩu cũ'; // Chặn nếu trùng mật khẩu cũ
                   }
                   return null;
                 },
@@ -376,14 +376,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 hintText: 'Nhập lại mật khẩu mới',
                 obscureText: _obscureConfirm,
                 onToggleVisibility: () {
-                  setState(() => _obscureConfirm = !_obscureConfirm);
+                  setState(() => _obscureConfirm = !_obscureConfirm); // Đảo trạng thái ẩn/hiện xác nhận
                 },
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
-                    return 'Vui lòng xác nhận mật khẩu mới';
+                    return 'Vui lòng xác nhận mật khẩu mới'; // Chặn nếu để trống
                   }
                   if (val.trim() != _newPasswordController.text.trim()) {
-                    return 'Mật khẩu xác nhận không khớp';
+                    return 'Mật khẩu xác nhận không khớp'; // Chặn nếu không khớp mật khẩu mới
                   }
                   return null;
                 },
@@ -394,7 +394,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 height: 50,
                 child: ElevatedButton(
                   key: const Key('submit_change_password_button'),
-                  onPressed: _isLoading ? null : _handleChangePassword,
+                  onPressed: _isLoading ? null : _handleChangePassword, // Khóa nút nếu đang loading, ngược lại gọi xử lý đổi mật khẩu
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
