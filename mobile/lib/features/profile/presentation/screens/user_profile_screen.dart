@@ -1,20 +1,29 @@
+// Import thư viện Material Design của Flutter
 import 'package:flutter/material.dart';
+// Import thư viện flutter_bloc để kết nối Cubit và lắng nghe ProfileState
 import 'package:flutter_bloc/flutter_bloc.dart';
+// Import bảng màu giao diện chuẩn thương hiệu thể thao
 import '../../../../core/constants/app_colors.dart';
+// Import service locator getIt để tự động tiêm ProfileCubit
 import '../../../../core/di/injection.dart';
+// Import thực thể UserProfileEntity chứa dữ liệu hồ sơ
 import '../../domain/entities/user_profile_entity.dart';
+// Import ProfileCubit quản lý trạng thái tải hồ sơ
 import '../cubit/profile_cubit.dart';
+// Import các trạng thái ProfileState (Loading, Loaded, Error)
 import '../cubit/profile_state.dart';
+// Import màn hình Chỉnh sửa hồ sơ EditProfileScreen
 import 'edit_profile_screen.dart';
 
 /// ============================================================================
-/// MÀN HÌNH XEM HỒ SƠ CÁ NHÂN (USER PROFILE SCREEN - UC-26)
+/// MÀN HÌNH XEM HỒ SƠ CÁ NHÂN (USER PROFILE SCREEN - UC-26: VIEW PROFILE)
 /// ============================================================================
 /// Màn hình này chịu trách nhiệm:
 /// 1. Tải và hiển thị chi tiết hồ sơ người dùng (Họ tên, Email, SĐT, Giới tính, Ngày tham gia).
 /// 2. Hỗ trợ thao tác kéo để làm mới (Pull-to-refresh) dữ liệu.
 /// 3. Điều hướng sang màn hình Chỉnh sửa hồ sơ (UC-27) và tự động đồng bộ lại UI khi lưu xong.
 class UserProfileScreen extends StatefulWidget {
+  // Constructor nhận key widget
   const UserProfileScreen({super.key});
 
   /// Phương thức static tạo Route điều hướng đến UserProfileScreen.
@@ -23,7 +32,7 @@ class UserProfileScreen extends StatefulWidget {
   static Route<void> route() {
     return MaterialPageRoute<void>(
       builder: (_) => BlocProvider<ProfileCubit>(
-        create: (_) => getIt<ProfileCubit>()..loadProfile(),
+        create: (_) => getIt<ProfileCubit>()..loadProfile(), // Khởi tạo và tải ngay
         child: const UserProfileScreen(),
       ),
     );
@@ -47,7 +56,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background, // Màu nền xám nhạt thể thao
       // Thanh tiêu đề AppBar với nút quay lại
       appBar: AppBar(
         title: const Text(
@@ -58,9 +67,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             color: AppColors.textPrimary,
           ),
         ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
+        centerTitle: true,             // Căn giữa tiêu đề
+        backgroundColor: Colors.white, // Nền trắng
+        elevation: 0,                  // Không bóng đổ
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
@@ -90,6 +99,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             return _buildProfileContent(state.profile);
           }
 
+          // Trường hợp mặc định trả về khoảng trống
           return const SizedBox.shrink();
         },
       ),
@@ -104,13 +114,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Icon cảnh báo lỗi
+            // Icon cảnh báo lỗi màu đỏ
             const Icon(
               Icons.error_outline_rounded,
               color: Colors.redAccent,
               size: 54,
             ),
             const SizedBox(height: 16),
+            // Tiêu đề lỗi
             const Text(
               'Không thể tải thông tin hồ sơ',
               style: TextStyle(
@@ -155,7 +166,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       onRefresh: () => context.read<ProfileCubit>().refreshProfile(),
       child: ListView(
         padding: const EdgeInsets.all(20),
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(), // Luôn cho phép kéo cuộn
         children: [
           // 1. Thẻ Avatar, Tên định danh & Huy hiệu thành viên phong cách thể thao
           _buildAvatarCard(profile),
@@ -433,7 +444,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ],
             ),
           ),
-          ?customTrailing,
+          if (customTrailing != null) customTrailing,
         ],
       ),
     );

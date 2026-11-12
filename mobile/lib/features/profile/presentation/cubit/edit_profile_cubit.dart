@@ -1,10 +1,14 @@
+// Import thư viện flutter_bloc để quản lý luồng trạng thái Cubit
 import 'package:flutter_bloc/flutter_bloc.dart';
+// Import thực thể UserProfileEntity chứa thông tin hồ sơ
 import '../../domain/entities/user_profile_entity.dart';
+// Import UseCase nghiệp vụ UpdateUserProfileUseCase từ tầng Domain
 import '../../domain/usecases/update_user_profile_usecase.dart';
+// Import các trạng thái EditProfileState
 import 'edit_profile_state.dart';
 
 /// ============================================================================
-/// EDIT PROFILE CUBIT - QUẢN LÝ TRẠNG THÁI LƯU THAY ĐỔI HỒ SƠ (UC-27)
+/// EDIT PROFILE CUBIT - QUẢN LÝ TRẠNG THÁI LƯU THAY ĐỔI HỒ SƠ (UC-27: EDIT PROFILE)
 /// ============================================================================
 /// Chịu trách nhiệm:
 /// 1. Nhận thông tin mới từ màn hình EditProfileScreen.
@@ -15,26 +19,27 @@ class EditProfileCubit extends Cubit<EditProfileState> {
   /// UseCase nghiệp vụ cập nhật hồ sơ người dùng
   final UpdateUserProfileUseCase updateUserProfileUseCase;
 
+  // Constructor tiêm UpdateUserProfileUseCase và đặt trạng thái ban đầu là EditProfileInitial
   EditProfileCubit({
     required this.updateUserProfileUseCase,
   }) : super(const EditProfileInitial());
 
-  /// Xử lý cập nhật thông tin hồ sơ:
+  /// Xử lý cập nhật thông tin hồ sơ (UC-27):
   /// - [profile]: Thực thể [UserProfileEntity] mang dữ liệu mới do người dùng nhập.
   Future<void> updateProfile(UserProfileEntity profile) async {
-    // 1. Phát trạng thái Loading
+    // Bước 1: Phát trạng thái Loading để nút CTA hiển thị vòng xoay tiến trình
     emit(const EditProfileLoading());
     try {
-      // 2. Gọi UseCase lưu dữ liệu xuống tầng Repository & DataSource
+      // Bước 2: Gọi UseCase lưu dữ liệu xuống tầng Repository & DataSource
       final updated = await updateUserProfileUseCase(profile);
 
-      // 3. Phát trạng thái Thành công kèm dữ liệu đã lưu
+      // Bước 3: Phát trạng thái Thành công kèm dữ liệu đã lưu
       emit(EditProfileSuccess(
         updatedProfile: updated,
         message: 'Cập nhật hồ sơ thành công!',
       ));
     } catch (e) {
-      // 4. Nếu có lỗi, lọc bỏ tiền tố "Exception: " để thông báo thân thiện hơn
+      // Bước 4: Nếu có lỗi, lọc bỏ tiền tố "Exception: " để thông báo thân thiện hơn
       emit(EditProfileFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }

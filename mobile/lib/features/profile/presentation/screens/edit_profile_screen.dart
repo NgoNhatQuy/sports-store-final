@@ -1,10 +1,18 @@
+// Import thư viện giao diện chuẩn Material Design của Flutter
 import 'package:flutter/material.dart';
+// Import thư viện flutter_bloc để kết nối Cubit và lắng nghe các trạng thái EditProfileState
 import 'package:flutter_bloc/flutter_bloc.dart';
+// Import bảng màu giao diện chuẩn thương hiệu thể thao của dự án
 import '../../../../core/constants/app_colors.dart';
+// Import service locator getIt để tự động tiêm EditProfileCubit
 import '../../../../core/di/injection.dart';
+// Import AuthCubit để đồng bộ lại tên người dùng trên toàn ứng dụng sau khi đổi
 import '../../../auth/presentation/cubit/auth_cubit.dart';
+// Import thực thể UserProfileEntity chứa thông tin hồ sơ
 import '../../domain/entities/user_profile_entity.dart';
+// Import EditProfileCubit quản lý trạng thái lưu thay đổi
 import '../cubit/edit_profile_cubit.dart';
+// Import các trạng thái EditProfileState (Initial, Loading, Success, Failure)
 import '../cubit/edit_profile_state.dart';
 
 /// ============================================================================
@@ -21,6 +29,7 @@ class EditProfileScreen extends StatefulWidget {
   /// Hồ sơ ban đầu trước khi sửa, dùng để đổ dữ liệu vào các ô nhập
   final UserProfileEntity initialProfile;
 
+  // Constructor nhận hồ sơ ban đầu
   const EditProfileScreen({
     super.key,
     required this.initialProfile,
@@ -32,7 +41,7 @@ class EditProfileScreen extends StatefulWidget {
   static Route<UserProfileEntity?> route({required UserProfileEntity profile}) {
     return MaterialPageRoute<UserProfileEntity?>(
       builder: (_) => BlocProvider<EditProfileCubit>(
-        create: (_) => getIt<EditProfileCubit>(),
+        create: (_) => getIt<EditProfileCubit>(), // Khởi tạo Cubit từ GetIt
         child: EditProfileScreen(initialProfile: profile),
       ),
     );
@@ -125,6 +134,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _phoneError = phoneErr;
     });
 
+    // Trả về true nếu không có lỗi nào
     return nameErr == null && phoneErr == null;
   }
 

@@ -1,22 +1,45 @@
+// Import thư viện Material Design của Flutter
 import 'package:flutter/material.dart';
+// Import thư viện flutter_bloc để lắng nghe trạng thái đăng nhập AuthCubit
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+// Import bảng màu giao diện chuẩn thương hiệu thể thao
 import '../../../../core/constants/app_colors.dart';
+// Import GetIt dependency injection
 import '../../../../core/di/injection.dart';
+// Import AuthService để dự phòng khởi tạo AuthRepository
 import '../../../auth/data/datasources/auth_service.dart';
+// Import AuthRepository để truyền vào LoginScreen
 import '../../../auth/data/repositories/auth_repository.dart';
+// Import AuthCubit để quản lý phiên xác thực
 import '../../../auth/presentation/cubit/auth_cubit.dart';
+// Import các trạng thái AuthState (Authenticated, Unauthenticated)
 import '../../../auth/presentation/cubit/auth_state.dart';
+// Import màn hình Đăng nhập LoginScreen
 import '../../../auth/presentation/screens/login_screen.dart';
+// Import màn hình danh sách Voucher
 import '../../../voucher/presentation/screens/voucher_list_screen.dart';
+// Import màn hình sổ địa chỉ nhận hàng AddressListScreen (CRUD Address)
 import '../../../address/presentation/screens/address_list_screen.dart';
+// Import màn hình lịch sử đơn hàng OrderHistoryScreen
 import '../../../order/presentation/screens/order_history_screen.dart';
+// Import màn hình Đổi mật khẩu
 import 'change_password_screen.dart';
+// Import màn hình Xem hồ sơ cá nhân UserProfileScreen (UC-26)
 import 'user_profile_screen.dart';
 
+/// ============================================================================
+/// MÀN HÌNH TAB TÀI KHOẢN (PROFILE TAB SCREEN)
+/// ============================================================================
+/// Đóng vai trò là trung tâm quản lý tài khoản của người dùng:
+/// - Khi chưa đăng nhập (Khách vãng lai): hiển thị màn hình chào mừng và nút Đăng nhập / Đăng ký.
+/// - Khi đã đăng nhập: hiển thị thanh thông tin tóm tắt cá nhân (Bấm vào mở UC-26 View Profile),
+///   danh mục Lịch sử đơn hàng, Kho Voucher, Sổ địa chỉ (CRUD Address), Đổi mật khẩu, Đăng xuất.
 class ProfileScreen extends StatelessWidget {
+  // Tiêu đề của màn hình (mặc định 'Tài khoản')
   final String title;
 
+  // Constructor khởi tạo nhận tiêu đề tùy chọn
   const ProfileScreen({
     super.key,
     this.title = 'Tài khoản',
@@ -25,7 +48,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background, // Màu nền ứng dụng
       appBar: AppBar(
         title: Text(
           title,
@@ -34,21 +57,25 @@ class ProfileScreen extends StatelessWidget {
             color: AppColors.textPrimary,
           ),
         ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
+        centerTitle: true,             // Căn giữa tiêu đề
+        backgroundColor: Colors.white, // Nền trắng
+        elevation: 0,                  // Phẳng không bóng
       ),
+      // Lắng nghe trạng thái AuthCubit để hiển thị giao diện phù hợp
       body: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
+          // Nếu đã đăng nhập thành công -> Hiển thị màn hình tài khoản
           if (state is AuthAuthenticated) {
             return _buildUserView(context, state);
           }
+          // Ngược lại nếu chưa đăng nhập -> Hiển thị màn hình dành cho khách vãng lai
           return _buildGuestView(context);
         },
       ),
     );
   }
 
+  /// Nút bấm mở màn hình Lịch sử đơn hàng
   Widget _buildOrderHistoryButton(BuildContext context) {
     return Material(
       color: Colors.white,
@@ -57,6 +84,7 @@ class ProfileScreen extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () {
+          // Mở màn hình lịch sử đơn hàng
           Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const OrderHistoryScreen()),
           );
@@ -75,6 +103,7 @@ class ProfileScreen extends StatelessWidget {
           ),
           child: Row(
             children: [
+              // Icon đơn hàng đóng khung bo tròn
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -120,6 +149,7 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Icon người dùng khách
             Container(
               width: 100,
               height: 100,
@@ -135,6 +165,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // Lời chào
             const Text(
               'Chào mừng đến với Sports Store',
               textAlign: TextAlign.center,
@@ -155,6 +186,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
+            // Nút bấm Đăng nhập / Đăng ký
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -168,7 +200,7 @@ class ProfileScreen extends StatelessWidget {
                   elevation: 2,
                 ),
                 onPressed: () {
-                  // Đẩy LoginScreen đè lên Navigator
+                  // Điều hướng sang màn hình LoginScreen
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => LoginScreen(
@@ -191,7 +223,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  /// Giao diện khi người dùng đã Đăng nhập thành công
+  /// Giao diện khi người dùng đã Đăng nhập thành công (AuthAuthenticated)
   Widget _buildUserView(BuildContext context, AuthAuthenticated state) {
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -203,6 +235,7 @@ class ProfileScreen extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: () {
+              // Chạm vào thẻ hồ sơ để mở màn hình xem chi tiết hồ sơ cá nhân UserProfileScreen (UC-26)
               Navigator.of(context).push(UserProfileScreen.route());
             },
             child: Container(
@@ -219,6 +252,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
+                  // Avatar tròn hiển thị chữ cái đầu của tên người dùng
                   CircleAvatar(
                     radius: 34,
                     backgroundColor: const Color(0xFFFFE8D6),
@@ -238,6 +272,7 @@ class ProfileScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Họ và tên người dùng
                         Text(
                           state.userName,
                           style: const TextStyle(
@@ -247,6 +282,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
+                        // Email tài khoản
                         Text(
                           state.userEmail.isNotEmpty
                               ? state.userEmail
@@ -260,6 +296,7 @@ class ProfileScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                  // Mũi tên điều hướng sang màn hình Profile chi tiết
                   const Icon(
                     Icons.arrow_forward_ios_rounded,
                     color: Colors.grey,
@@ -272,6 +309,7 @@ class ProfileScreen extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
+        // Nút mở lịch sử đơn hàng
         _buildOrderHistoryButton(context),
         const SizedBox(height: 16),
 
@@ -281,8 +319,8 @@ class ProfileScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
-            // 1. Người dùng chạm vào thẻ Kho Voucher -> Điều hướng sang màn hình VoucherListScreen (UC-21)
             onTap: () {
+              // Mở màn hình danh sách Voucher (UC-21)
               Navigator.of(context).push(VoucherListScreen.route());
             },
             child: Container(
@@ -348,13 +386,14 @@ class ProfileScreen extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // 3. Thẻ Sổ địa chỉ nhận hàng
+        // 3. Thẻ Sổ địa chỉ nhận hàng (CRUD Address - UC-28)
         Material(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: () {
+              // Mở màn hình danh sách sổ địa chỉ nhận hàng AddressListScreen (UC-28)
               Navigator.of(context).push(AddressListScreen.route());
             },
             child: Container(
@@ -420,13 +459,14 @@ class ProfileScreen extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
+        // 4. Thẻ Đổi mật khẩu
         Material(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
-            // 1. Chạm 'Đổi mật khẩu' (onTap) -> mở ChangePasswordScreen (UC-28)
             onTap: () {
+              // Mở màn hình Đổi mật khẩu ChangePasswordScreen
               Navigator.of(context).push(ChangePasswordScreen.route());
             },
             child: Container(
@@ -492,14 +532,13 @@ class ProfileScreen extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // 5. Thẻ Đăng xuất khớp giao diện thiết kế
+        // 5. Thẻ Đăng xuất tài khoản
         Material(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
-            // 1. Người dùng bấm vào thẻ Đăng xuất -> Gọi hàm hiển thị dialog xác nhận
-            onTap: () => _confirmLogout(context),
+            onTap: () => _confirmLogout(context), // Mở dialog xác nhận đăng xuất
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
               decoration: BoxDecoration(
@@ -537,8 +576,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  /// Hộp thoại xác nhận đăng xuất
-  // Hiển thị AlertDialog xác nhận và điều phối luồng đăng xuất tài khoản (UC-03)
+  /// Hộp thoại xác nhận đăng xuất (UC-03)
   Future<void> _confirmLogout(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -549,12 +587,12 @@ class ProfileScreen extends StatelessWidget {
         ),
         content: const Text('Bạn có chắc chắn muốn đăng xuất không?'),
         actions: [
-          // 2. Người dùng bấm 'Hủy' -> Đóng hộp thoại, giữ nguyên trạng thái đăng nhập
+          // Nút Hủy
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('Hủy'),
           ),
-          // 3. Người dùng bấm 'Đăng xuất' -> Xác nhận đồng ý thoát tài khoản
+          // Nút Đăng xuất xác nhận
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text(
@@ -569,12 +607,13 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
 
+    // Nếu người dùng chọn đồng ý đăng xuất
     if (confirm == true && context.mounted) {
       final messenger = ScaffoldMessenger.maybeOf(context);
-      // 4. Gọi AuthCubit xử lý đăng xuất: xóa token, dọn cache và phát AuthUnauthenticated
+      // Gọi AuthCubit để xóa token và đưa state về Unauthenticated
       await context.read<AuthCubit>().logout();
       if (!context.mounted) return;
-      // 5. Hiển thị thông báo hoàn tất, giao diện tự động cập nhật về trạng thái khách (Guest)
+      // Hiển thị thông báo hoàn tất
       messenger?.showSnackBar(
         const SnackBar(
           content: Text('Đã đăng xuất thành công'),
