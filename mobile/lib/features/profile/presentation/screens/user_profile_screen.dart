@@ -444,7 +444,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ],
             ),
           ),
-          if (customTrailing != null) customTrailing,
+          ?customTrailing,
         ],
       ),
     );
